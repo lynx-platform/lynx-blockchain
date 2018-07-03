@@ -29,7 +29,7 @@ class Edge {
         for (let key in state) {
             if (key in this.state) this.state[key] = state[key];
         }
-        return JSON.stringify(this.state);
+        return 'Σ' + JSON.stringify(this.state);
     }
 }
 

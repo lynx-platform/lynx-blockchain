@@ -8,12 +8,6 @@ var storage = undefined;
 
 class Engine {
     constructor(name, callback) {
-        // Program Table
-        // this.pgmTable = [];
-        // Test
-        //this.pgmTable = [
-        //    {address: '0', body: 'console.log("Hello World!")'}
-        //];
         storage = new Storage(name);
         if (callback) callback();
     }
@@ -46,7 +40,10 @@ class Engine {
                 if (err) return console.error(err);
                 debug_exec('stdout: ' + stdout);
                 //TODO: change stdout to return value of the program
-                //storage.store(address, stdout);
+                if (stdout.charAt(0) == 'Σ') {
+                    let state = stdout.substring(1, stdout.length);
+                    storage.store(address, state);
+                }
             });
         });
     }
