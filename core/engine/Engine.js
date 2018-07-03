@@ -46,7 +46,7 @@ class Engine {
                 if (err) return console.error(err);
                 debug_exec('stdout: ' + stdout);
                 //TODO: change stdout to return value of the program
-                storage.store(address, stdout);
+                //storage.store(address, stdout);
             });
         });
     }
