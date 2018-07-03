@@ -3,6 +3,9 @@ var SHA256 = require('crypto-js/sha256');
 var exec = require('child_process').exec;
 var Storage = require('./Storage.js');
 
+var debug_exec = require('debug')('engine:exec');
+var storage = undefined;
+
 class Engine {
     constructor(name, callback) {
         // Program Table
@@ -11,7 +14,7 @@ class Engine {
         //this.pgmTable = [
         //    {address: '0', body: 'console.log("Hello World!")'}
         //];
-        this.storage = new Storage(name);
+        storage = new Storage(name);
         if (callback) callback();
     }
 
@@ -26,7 +29,7 @@ class Engine {
         let state = typeof constructor === 'function' ? eval('(' + String(constructor) + ')()') : constructor;
         console.log('state:\n' + state);
 
-        this.storage.store(address, state, function() {
+        storage.store(address, state, function() {
             fs.writeFile('storage/' + address + '.js', code, function(err) {
                 if (err) return console.error(err);
                 console.log("Deploy completed");
@@ -35,13 +38,16 @@ class Engine {
     }
 
     execute(address, input) {
-        this.storage.load(address, function(value) {
-            let child = exec('node ' + 'storage/' + address + '.js --state \'' + value + '\' --input \'' + input + '\'', function (err, stdout, stderr) {
+        storage.load(address, function(value) {
+            debug_exec(value);
+            let command = 'node ' + 'storage/' + address + '.js --state \'' + value + '\' --input \'' + input + '\'';
+            debug_exec(command);
+            let child = exec(command, function (err, stdout, stderr) {
                 if (err) return console.error(err);
-                console.log('stdout: ' + stdout);
-                console.log('stderr: ' + stderr);
+                debug_exec('stdout: ' + stdout);
+                //TODO: change stdout to return value of the program
+                storage.store(address, stdout);
             });
-
         });
     }
 }

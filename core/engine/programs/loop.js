@@ -1,9 +1,9 @@
-const global = require('./wrapper.js');
+const edge = require('../Edge.js');
 
-var a = JSON.parse(global.src).a;
+var a = edge.getState('a');
 
 for (let i = 0; i < 100; i++) {
     a++;
 }
 
-console.log(a);
+console.log(edge.setState({'a': a}));
