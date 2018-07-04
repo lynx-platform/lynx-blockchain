@@ -7,6 +7,9 @@ const argsDefinitions = [
     { name: 'input', type: String, multiple: false},
 ];
 
+// Edge class defines an API layer to implement edge computing technique
+// embeded in our blockchain service layer.
+// TODO Add challenging logic.
 class Edge {
     constructor() {
         let args = commandLineArgs(argsDefinitions);
@@ -23,7 +26,6 @@ class Edge {
         edge_debug('input: ' + this.input);
         return this.input[arg];
     }
-
 
     setState(state) {
         for (let key in state) {

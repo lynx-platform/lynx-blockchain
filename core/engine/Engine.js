@@ -6,6 +6,12 @@ var Storage = require('./Storage.js');
 var debug_exec = require('debug')('engine:exec');
 var storage = undefined;
 
+// Engine class defines simple execution logic of the blockchain node (client).
+// Lynx blockchain uses Google V8 JavaScript Engine as backbone validating VM.
+// Deploying smart contracts automatically calls deploy() funciton and try to
+// run constructor for initiation. Execution of a function defined in a smart
+// contract is done by sending transaction TO a contract address with approp-
+// riate arguments.
 class Engine {
     constructor(name, callback) {
         // Program Table
@@ -37,6 +43,7 @@ class Engine {
         });
     }
 
+    // execute - Called by transaction which specifies 
     execute(address, input) {
         storage.load(address, function(value) {
             debug_exec(value);

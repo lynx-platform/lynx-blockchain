@@ -1,6 +1,7 @@
 var levelup = require('levelup')
 var leveldown = require('leveldown')
 
+// Storage class defines basic functionalities to implement storage interface.
 class Storage {
     constructor (path) {
         this.db = levelup(leveldown(path));
