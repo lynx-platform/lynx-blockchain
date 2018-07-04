@@ -1,37 +1,48 @@
 var jot = require('json-over-tcp');
 var Transaction = require('./Transaction.js');
 var Blockchain = require('./Blockchain.js');
-class BaseNode {
+var Block = require('./Block.js')
+var Promise = require('promise');
+
+
+class Basenode {
+
+
 
     constructor(blockchain, port=3030, firstPeerNode=undefined){
         //TODO peers는 노드정보여야 한다.
         this.peers = [];
         this.blockchain = blockchain;
         if (firstPeerNode!=undefined){
-            console.log(firstPeerNode);
-            this.connectPeer(firstPeerNode);
+            this.peers.push(firstPeerNode);
         }
         this.port = port;
     }
 
     createServer(){
         console.log("create Server");
-        let server = jot.createServer(((socket)=>{
-//        server.on('connection', ((socket)=>{
-            console.log('socket connected>>' + socket.remoteAddress + ':' + socket.remotePort);
-            console.log('socket connected>>' + socket.localAddress + ':' + socket.localPort);
-            this.peers.push();
+        let server = jot.createServer();
+        server.on('connection', ((socket)=>{
+            //console.log('socket connected>>' + socket.remoteAddress + ':' + socket.remotePort);
+            //console.log('socket connected>>' + socket.localAddress + ':' + socket.localPort);
 
             socket.on('data',((data)=>{
+                console.log(this.port+" : new connection");
+                let clientNode = new Node(socket.remoteAddress, data.port);
+                for(let i in this.peers){
+                    if(JSON.stringify(this.peers[i]) == JSON.stringify(clientNode)){
+                        this.peers.push(clientNode);
+                    }
+                }
                 switch (data.msgType){
                     case 'addr':
                         for(const node in data.addr_list){
-                            this.connectPeer(node);
+                            //this.connectPeer(node);
+                            //TODO
                         }
                         break;
                     case 'inv':
-                        console.log("inv receiver : "+socket.remotePort);
-                        replyInv.call(this, socket, data.inventory);
+                        replyInv.call(this, clientNode, data.inventory);
                         /*
                         var replyInvBind= replyInv.bind(this);
                         replyInvBind(socket, data.inventory);
@@ -43,16 +54,18 @@ class BaseNode {
                         addr(socket);
                         break;
                     case 'getdata':
-                        replyGetData(socket, data.inventory);
+                        replyGetData.call(this,clientNode, data.inventory);
                         break;
                     case 'getblocks':
-                        console.log("get getblocks");
-                        console.log("getblocks receiver : "+socket.remotePort);
-                        replyGetBlock(socket, data.inventory);
+                        replyGetBlock.call(this,clientNode, data.inventory);
+                        break;
                     case 'tx':
-                        pushTx(socket, data.transactions);
+                        pushTx.call(this,clientNode, data.transactions);
+                        break;
                     case 'block':
-                        pushBlock(socket, data.blocks);
+                        console.log("cannot get data.blocks");
+                        pushBlock.call(this,clientNode, data.blocks);
+                        break;
                     default:
                         break;
                 }
@@ -63,7 +76,7 @@ class BaseNode {
                 console.log('socket disconnected');
             });
 
-            function replyInv(socket, inventory){
+            function replyInv(node, inventory){
                 let txsInv = [];
                 let blocksInv = [];
                 for(const i in inventory){
@@ -72,6 +85,7 @@ class BaseNode {
                     const hash = inv.hash;
                     switch(inv.type){
                         case 'msg_tx':
+                            console.log('get msg_tx');
                             for(const i in this.blockchain.memPool){
                                 const tx = this.blockchain.memPool[i];
                                 if(tx.calculateHash == hash){
@@ -81,10 +95,10 @@ class BaseNode {
                             }
                             break;
                         case 'msg_block':
-                            console.log('get msg_block');
+                            console.log(this.port+' : get msg_block in');
                             for(const i in this.blockchain.chain){
                                 if(this.blockchain.chain[i].hash == hash){
-                                    console.log("find matching block");
+                                    console.log(this.port+" : find matching block");
                                     flag = true;
                                     break;
                                 }
@@ -100,96 +114,125 @@ class BaseNode {
                 }
 
                 if(txsInv.length!=0){
-                    getData(socket, txsInv);
+                    getData(node, txsInv);
                 }
 
                 if(blocksInv.length!=0){
-                    getBlocks(socket, blocksInv);
+                    console.log(this.port+" : call getblocks");
+                    getBlocks.call(this, node, blocksInv);
                 }
 
             }
-            function replyGetData(socket, inventory){
+
+            function replyGetData(node, inventory){
                 let txs = [];
                 for(const i in this.blockchain.memPool){
                     const tx = this.blockchain.memPool[i];
                     const hash = tx.calculateHash();
                     const inv = new Inventory('msg_tx',hash);
-                    if(inventory.includes(inv)){
-                        txs.push(tx);
+                    for(let i in inventory){
+                        if(JSON.stringify(inventory[i])==JSON.stringify(inv)){
+                            txs.push(tx);
+                        }
                     }
                 }
-                socket.write({'msgType':'tx', 'transactions':txs});
+                this.connectPeer(node).then((socket)=>{socket.write({'msgType':'tx', 'transactions':txs, 'port':this.port})});
             }
 
-            function replyGetBlock(socket, inventory){
+            function replyGetBlock(node, inventory){
+                console.log(this.port+ " : replyGetBlock");
                 let blocks = [];
                 for(const i in this.blockchain.chain){
                     const block = this.blockchain.chain[i];
                     const hash = block.calculateHash();
-                    const inv = new Inventory('msg_block',hash);
-                    if(inventory.includes(inv)){
-                        blocks.push(block);
+
+                    const inv = {'type' : 'msg_block', 'hash' : hash};
+
+                    for(let j in inventory){
+                        if(JSON.stringify(inventory[j]) == JSON.stringify(inv)){
+                            blocks.push(block);
+                        }
                     }
                 }
-                socket.write({'msgType':'block', 'blocks':blocks});
-
+                this.connectPeer(node).then((socket)=>{socket.write({'msgType':'block', 'blocks':blocks, 'port':this.port})});
             }
 
-            function pushTx(socket, transactions){
+            function pushTx(node, transactions){
                 let invs = [];
                 for(const i in transactions){
+                    let inFlag = true;
                     const tx = transactions[i];
-                    if(!this.blockchain.memPool.includes(tx)){
-                        this.blockchain.createTransaction();
+                    for(let j in this.blockchain.memPool){
+                        if(JSON.stringify(this.blockchain.memPool[j]) == JSON.stringify(tx)){
+                            inFlag = false;
+                        }
+                    }
+                    if(inFlag){
+                        const newTx = new Transaction(tx.fromAddress, tx.toAddress, tx.amount);
+                        this.blockchain.createTransaction(newTx);
                         let inv = new Inventory('msg_tx',tx.calculateHash());
                         invs.push(inv);
                     }
                 }
-                this.sendInv(invs, socket);
+
+                if(invs.length!=0){
+                    console.log(this.port+" : call sendinv");
+                    this.sendInv.call(this, invs, node);
+                }
             }
 
-            function pushBlock(socket, blocks){
-                console.log("pushBlock");
+            function pushBlock(node, blocks){
+                //console.log(blocks[0]);
                 let invs = [];
-                for(const i in transactions){
-                    const block = this.blockchain.chain[i];
-                    if(!this.blockchain.chain.includes(block)){
-                        this.blockchain.createTransaction(block);
-                        let inv = new Inventory('msg_block', block.calculateHash());
+                for(let i in blocks){
+                    let inFlag = true;
+                    const block = blocks[i];
+                    for(let j in this.blockchain.chain){
+                        if(JSON.stringify(this.blockchain.chain[j]) == JSON.stringify(block)){
+                            inFlag = false;
+                        }
+                    }
+                    if(inFlag){
+                        const newBlock = new Block(block.index, block.timestamp, block.transactions, block.previousHash, block.nonce, block.previousDifficulty);
+                        this.blockchain.chain.push(newBlock);
+                        let inv = new Inventory('msg_block', block.hash);
                         invs.push(inv);
                     }
                 }
-                this.sendInv(invs, socket);
 
+                if(invs.length!=0){
+                    console.log(this.port+" : call sendinv");
+                    this.sendInv.call(this, invs, node);
+                }
             }
 
-            function addr(socket){
+            function addr(node){
                 //TODO socket port and listener port is different!
                 let nodes = [];
-                let count = 0;
-                for (let peer in this.peers){
-                    let node = new Node(peer.remoteAddress, peer.port);
-                    nodes.push(node);
-                    count++;
-                };
-                socket.write({'msgType':'addr', 'addr_list':nodes});
+                for (let i in this.peers){
+                    if(this.peers[i]!=node){
+                        nodes.push(this.peers[i]);
+                    }
+                }
+                this.connectPeer(node).then((socket)=>{socket.write({'msgType':'addr', 'addr_list':nodes, 'port':this.port})});
             }
 
-            function getData(socket, inventory){
-                socket.write({'msgType':'getdata', 'inventory':inventory});
+            function getData(node, inventory){
+                this.connectPeer(node).then((socket)=>{socket.write({'msgType':'getdata', 'inventory':inventory, 'port':this.port})});
             }
 
-            function getBlocks(socket, inventory){
-                console.log("real getBlock, inv : "+inventory[0].hash);
-                console.log("with socket, "+socket.remotePort);
-                socket.write({'msgType':'getblocks', 'inventory':inventory});
+            function getBlocks(node, inventory){
+                console.log(this.port+" : real getBlock, inv : "+inventory[0].hash);
+                //console.log("with socket, "+socket.remotePort);
+                this.connectPeer(node).then((socket)=>{socket.write({'msgType':'getblocks', 'inventory':inventory, 'port':this.port})});
+                //this.connectPeer(node).write({'msgType':'getblocks', 'inventory':inventory});
             }
 
-            function notFound(socket, data){
-                socket.write({'msgType':'notfound', 'inventory':data});
+            function notFound(node, data){
+                this.connectPeer(node).then((socket)=>{socket.write({'msgType':'notfound', 'inventory':data, 'port':this.port})});
             }
 
-            function getHeaders(socket){
+            function getHeaders(node){
 
             }
         }).bind(this));
@@ -208,25 +251,22 @@ class BaseNode {
     }
 
     connectPeer(node){
-        let socket = new jot.Socket();
-        socket.connect(node.port, node.ip, (()=>{
-            socket.localPort = this.port;
-            this.peers.push(socket);
-        }).bind(this));
+        return new Promise((resolve, reject)=>{
+            let socket = new jot.Socket();
+            socket.connect(node.port, node.ip, (()=>{
+                //socket.localPort = this.port;
+                console.log(this.port+" : connect to "+socket.remotePort);
+                resolve(socket);
+            }).bind(this));
+        })
     }
 
 
-    sendInv(inventory, socket = undefined){
-        console.log(this.peers);
+    sendInv(inventory, node = undefined){
+        console.log(this.port+" : send inv message");
         for(let i in this.peers){
-            if(this.peers[i] != socket){
-//                this.peers[i].write({msgType:'inv'});
-
-                console.log(inventory);
-                console.log(JSON.stringify(inventory));
-                this.peers[i].write({'msgType':'inv', 'inventory':inventory});
-                console.log("inv sender : "+this.peers[i].remotePort);
-                console.log("before sending, data : "+JSON.stringify(inventory));
+            if(this.peers[i] != node){
+                this.connectPeer(this.peers[i]).then((socket)=>{socket.write({'msgType':'inv', 'inventory':inventory, 'port':this.port})});
             }
         }
     }
@@ -250,22 +290,4 @@ class Node{
     }
 }
 
-let blockchain1 = new Blockchain("first");
-let bNode1 = new BaseNode(blockchain1);
-bNode1.createServer();
-let blockchain2 = new Blockchain("second");
-const node = new Node('127.0.0.1',3030);
-let bNode2 = new BaseNode(blockchain2, 3040, node);
-bNode2.createServer();
-for(let i=1; i<4; i++){
-    setTimeout(()=>{
-        console.log("start "+i);
-        bNode2.blockchain.createTransaction(new Transaction(i,i,i));
-        bNode2.blockchain.createTransaction(new Transaction(i,2*i,3*i));
-        bNode2.blockchain.minePendingTransactions();
-        bNode2.sendInv([new Inventory('msg_block', bNode2.blockchain.chain[i].hash)]);
-    },1000*i);
-}
-setTimeout(()=>{
-    console.log(bNode1.blockchain.chain[3]);
-},4000)
+module.exports = {Basenode, Inventory, Node};
