@@ -1,14 +1,15 @@
 const SHA256 = require('crypto-js/sha256');
 const commandLineArgs = require('command-line-args');
 const edge_debug = require('debug')('edge');
-const Storage = require('../../Storage.js');
+const BlockDB = require('../../BlockDB.js');
 
 // TODO: refine options
 const argsDefinitions = [
 	{ name: 'blockchain', type: String, multiple: false, defaultOption: true },
-	{ name: 'sender', type: String, multiple: false},
-	{ name: 'state', type: String, multiple: false},
-	{ name: 'input', type: String, multiple: false},
+	{ name: 'address', type: String, multiple: false },
+	{ name: 'sender', type: String, multiple: false },
+	{ name: 'state', type: String, multiple: false },
+	{ name: 'input', type: String, multiple: false }
 ];
 
 // Edge class defines an API layer to implement edge computing technique
@@ -17,10 +18,11 @@ const argsDefinitions = [
 class Edge {
 	constructor() {
 		let args = commandLineArgs(argsDefinitions);
+		this.blockDB = new BlockDB(args.blockchain);
+		this.address = args.address;
 		this.state = JSON.parse(args.state);
 		this.input = JSON.parse(args.input);
 		this.sender = args.sender;
-		this.storage = new Storage(args.blockchain);
 	}
 
 	getState(arg) {
@@ -45,15 +47,23 @@ class Edge {
 	}
 
 	getBalance(address) {
-		this.storage.
+		this.blockDB.get(address (err, balance) => {
+			return balance;
+		});
 	}
 
 	transmit(address, amount) {
-
+		this.blockDB.get(this.address, (err, fromBalance) => {
+				this.blockDB.get(address, (err, toBalance) => {
+					if (fromBalance > amount) {
+						
+					}
+				});
+		});
 	}
 
 	getTxSigniture() {
-		
+	
 	}
 
 	validateSignature(signature) {

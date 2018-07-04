@@ -15,6 +15,10 @@ class Block {
         return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.transactions) + this.nonce).toString();
     }
 
+		getHash() {
+			return this.hash;
+		}
+
     mineBlock() {
         while (this.hash.substring(0, this.difficulty) !== Array(this.difficulty + 1).join("0")) {
             this.nonce++;
