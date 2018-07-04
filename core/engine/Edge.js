@@ -4,7 +4,8 @@ const edge_debug = require('debug')('edge');
 
 // TODO: refine options
 const argsDefinitions = [
-	{ name: 'state', type: String, multiple: false, defaultOption: true },
+	{ name: 'blockchain', type: String, multiple: false, defaultOption: true },
+	{ name: 'state', type: String, multiple: false},
 	{ name: 'input', type: String, multiple: false},
 ];
 
