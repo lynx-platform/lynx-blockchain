@@ -29,6 +29,13 @@ class Edge {
 		edge_debug('state: ' + this.state);
 		return this.state[arg];
 	}
+	
+	setState(state) {
+		for (let key in state) {
+			if (key in this.state) this.state[key] = state[key];
+		}
+		return 'Σ' + JSON.stringify(this.state);
+	}
 
 	getInput(arg) {
 		edge_debug('input: ' + this.input);
@@ -39,31 +46,35 @@ class Edge {
 		return this.sender;
 	}
 
-	setState(state) {
-		for (let key in state) {
-			if (key in this.state) this.state[key] = state[key];
-		}
-		return 'Σ' + JSON.stringify(this.state);
-	}
-
 	getBalance(address, callback) {
-		this.blockDB.get(address (err, balance) => {
-            if (err) {
-                return console.error(err);
-            }
-            callback(balance);
+		this.blockDB.get(address, (err, balance) => {
+			callback(balance);
 		});
 	}
 
-	transmit(address, amount) {
+	setBalance(address, balance, callback) {
+		this.blockDB.put(address, balance, (err) => {
+			if (err) return console.error(err);
+			callback();
+		});
+	}
+
+	transmit(toAddress, amount, callback) {
 		this.blockDB.get(this.address, (err, fromBalance) => {
-            this.blockDB.get(address, (err, toBalance) => {
-                if (fromBalance > amount) {
-                    // Set state
-                    fromBalance -= amount;
-                    toBalance += amount;
-                }
-            });
+			if (err) return console.error(err);	
+			this.blockDB.get(address, (err, toBalance) => {
+				if (err) return console.error(err);
+				if (fromBalance > amount) {
+					this.blockDB.put(toAddress, toBalance + amount, (err) => {
+						if (err) return console.error(err);
+						this.blockDB.put(this.address, fromBalance - amount, (err) => {
+							if (err) return console.error(err);
+							callback();
+						});
+					});
+				}
+				return console.error("Insufficient balance");
+			});
 		});
 	}
 
