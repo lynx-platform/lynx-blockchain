@@ -1,31 +1,32 @@
 var Blockchain = require('../Blockchain.js');
 var Transaction = require('../Transaction.js');
 
-// DAO class defines depositable contracts having their own balance.
+// Deposit class defines depositable contracts having their own balance.
 // deposit and withdraw is the main functionality this model supports.
 // Provides security check.
-class DAO {
-    constructor(blockchain) {
+class Deposit {
+    constructor(blockchain, total) {
         this.blockchain = blockchain;
-        this.depositMap = new Object();
+        this.depositMap = {
+            undefined: total
+        };
     }
 
     // Deposit some amount from the node balance.
-    deposit(address, amount) {
+    deposit(address, amount, signature) {
         // Must be preceded with balance check.
         blockchain.getBalanceOfAddress(address) < amount;
         // TODO when does it check??
 
-        if (depositMap[address] != null) {
+        if (!depositMap[address])
             depositMap[address] += amount;
-        } else {
+        else
             depositMap[address] = amount;
-        }
     }
 
     // Withdraw from the deposit in the contract.
-    withdraw(address, amount) {
-        if (depositMap[address] != null) {
+    withdraw(address, amount, signature) {
+        if (!depositMap[address]) {
             console.log('Retrieval from empty address: ' + address);
         }
         else if (depositMap[address] < amount) {
@@ -38,6 +39,14 @@ class DAO {
             blockchain.createTransaction(new Transaction(..........));
         }
     }
+
+    // Get values in the deposit assigned to the specified address. If none is
+    // specified, return undepositted value.
+    getDeposit(address) {
+        var val = depositMap[address];
+        if (!val) return 0;
+        else return val;
+    }
 }
 
-module.exports = DAO;
+module.exports = Deposit;
