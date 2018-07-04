@@ -168,7 +168,7 @@ class Basenode {
                         }
                     }
                     if(inFlag){
-                        const newTx = new Transaction(tx.fromAddress, tx.toAddress, tx.amount);
+                        const newTx = new Transaction(tx.type, tx.nonce, tx.fromAddress, tx.toAddress, tx.isToContract, tx.value, tx.signature, tx.data);
                         this.blockchain.createTransaction(newTx);
                         let inv = new Inventory('msg_tx',tx.calculateHash());
                         invs.push(inv);
