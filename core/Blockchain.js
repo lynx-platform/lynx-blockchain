@@ -1,6 +1,8 @@
 var Block = require('./Block.js');
 var Transaction = require('./Transaction.js');
 
+// Blockchain class defines the data structure of the full (validating) node
+// in the blockchain network, as well as the APIs to make use of the system.
 class Blockchain {
 	constructor(miningRewardAddress) {
 		// Blockchain
@@ -13,7 +15,7 @@ class Blockchain {
 
 		// Memory Pool for storing pending transactions
 		this.memPool = [
-			new Transaction(this.coinbase, this.miningRewardAddress, this.miningReward)
+			new Transaction(0, this.coinbase, this.miningRewardAddress, false, this.miningReward, null, null)
 		];
 
 	}
@@ -29,7 +31,6 @@ class Blockchain {
 	createTransaction(transaction) {
 		this.memPool.push(transaction);
 	}
-
 
 	// Debug
 	getMemPoolState() {
@@ -49,7 +50,7 @@ class Blockchain {
 
 		// Reset the pending transactions and send the mining reward
 		this.memPool = [
-			new Transaction(this.coinbase, this.miningRewardAddress, this.miningReward)
+			new Transaction(0, this.coinbase, this.miningRewardAddress, false, this.miningReward, null, null)
 		];
 	}
 

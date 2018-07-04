@@ -7,7 +7,9 @@ const argsDefinitions = [
 	{ name: 'input', type: String, multiple: false},
 ];
 
-// APIs for user program
+// Edge class defines an API layer to implement edge computing technique
+// embeded in our blockchain service layer.
+// TODO Add challenging logic.
 class Edge {
 	constructor() {
 		let args = commandLineArgs(argsDefinitions);
