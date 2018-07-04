@@ -85,19 +85,24 @@ class Basenode {
                     const hash = inv.hash;
                     switch(inv.type){
                         case 'msg_tx':
-                            console.log('get msg_tx');
-                            for(const i in this.blockchain.memPool){
-                                const tx = this.blockchain.memPool[i];
+                            console.log(this.port+' : get msg_tx');
+                            console.log(this.blockchain.memPool.length);
+                            for(let j in this.blockchain.memPool){
+                                console.log(j);
+                                const tx = this.blockchain.memPool[j];
                                 if(tx.calculateHash == hash){
-                                    txsInv.push(inv);
+                                    flag = true;
                                     break;
                                 }
+                            }
+                            if(flag == false){
+                                txsInv.push(inv);
                             }
                             break;
                         case 'msg_block':
                             console.log(this.port+' : get msg_block in');
-                            for(const i in this.blockchain.chain){
-                                if(this.blockchain.chain[i].hash == hash){
+                            for(const j in this.blockchain.chain){
+                                if(this.blockchain.chain[j].hash == hash){
                                     console.log(this.port+" : find matching block");
                                     flag = true;
                                     break;
@@ -114,7 +119,7 @@ class Basenode {
                 }
 
                 if(txsInv.length!=0){
-                    getData(node, txsInv);
+                    getData.call(this, node, txsInv);
                 }
 
                 if(blocksInv.length!=0){
@@ -170,7 +175,7 @@ class Basenode {
                     if(inFlag){
                         const newTx = new Transaction(tx.type, tx.nonce, tx.fromAddress, tx.toAddress, tx.isToContract, tx.value, tx.signature, tx.data);
                         this.blockchain.createTransaction(newTx);
-                        let inv = new Inventory('msg_tx',tx.calculateHash());
+                        let inv = new Inventory('msg_tx',newTx.calculateHash());
                         invs.push(inv);
                     }
                 }
