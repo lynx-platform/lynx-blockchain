@@ -7,46 +7,46 @@ var debug_exec = require('debug')('engine:exec');
 var storage = undefined;
 
 class Engine {
-    constructor(name, callback) {
-        storage = new Storage(name);
-        if (callback) callback();
-    }
+	constructor(name, callback) {
+		storage = new Storage(name);
+		if (callback) callback();
+	}
 
-    // TODO: fail if a program has been deployed
-    deploy(path, constructor) {
-        let code = fs.readFileSync(path, 'utf8');
-        let name = path.replace(/^.*[\\\/]/, '');
-        let address = SHA256(name + code).toString();
-        console.log('name: ' + name);
-        console.log('address: ' + address);
+	// TODO: fail if a program has been deployed
+	deploy(path, constructor) {
+		let code = fs.readFileSync(path, 'utf8');
+		let name = path.replace(/^.*[\\\/]/, '');
+		let address = SHA256(name + code).toString();
+		console.log('name: ' + name);
+		console.log('address: ' + address);
 
-        let state = typeof constructor === 'function' ? eval('(' + String(constructor) + ')()') : constructor;
-        console.log('state:\n' + state);
+		let state = typeof constructor === 'function' ? eval('(' + String(constructor) + ')()') : constructor;
+		console.log('state:\n' + state);
 
-        storage.store(address, state, function() {
-            fs.writeFile('storage/' + address + '.js', code, function(err) {
-                if (err) return console.error(err);
-                console.log("Deploy completed");
-            });
-        });
-    }
+		storage.store(address, state, function() {
+			fs.writeFile('storage/' + address + '.js', code, function(err) {
+				if (err) return console.error(err);
+				console.log("Deploy completed");
+			});
+		});
+	}
 
-    execute(address, input) {
-        storage.load(address, function(value) {
-            debug_exec(value);
-            let command = 'node ' + 'storage/' + address + '.js --state \'' + value + '\' --input \'' + input + '\'';
-            debug_exec(command);
-            let child = exec(command, function (err, stdout, stderr) {
-                if (err) return console.error(err);
-                debug_exec('stdout: ' + stdout);
-                //TODO: change stdout to return value of the program
-                if (stdout.charAt(0) == 'Σ') {
-                    let state = stdout.substring(1, stdout.length);
-                    storage.store(address, state);
-                }
-            });
-        });
-    }
+	execute(address, input) {
+		storage.load(address, function(value) {
+			debug_exec(value);
+			let command = 'node ' + 'storage/' + address + '.js --state \'' + value + '\' --input \'' + input + '\'';
+			debug_exec(command);
+			let child = exec(command, function (err, stdout, stderr) {
+				if (err) return console.error(err);
+				debug_exec('stdout: ' + stdout);
+				//TODO: change stdout to return value of the program
+				if (stdout.charAt(0) == 'Σ') {
+					let state = stdout.substring(1, stdout.length);
+					storage.store(address, state);
+				}
+			});
+		});
+	}
 }
 
 module.exports = Engine;

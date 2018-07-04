@@ -2,97 +2,97 @@ var Block = require('./Block.js');
 var Transaction = require('./Transaction.js');
 
 class Blockchain {
-    constructor(miningRewardAddress) {
-        // Blockchain
-        this.chain = [this.createGenesisBlock()];
+	constructor(miningRewardAddress) {
+		// Blockchain
+		this.chain = [this.createGenesisBlock()];
 
-        // Reward for miner
-        this.coinbase = new Array(64).join('0');
-        this.miningReward = 100;
-        this.miningRewardAddress = miningRewardAddress;
+		// Reward for miner
+		this.coinbase = new Array(64).join('0');
+		this.miningReward = 100;
+		this.miningRewardAddress = miningRewardAddress;
 
-        // Memory Pool for storing pending transactions
-        this.memPool = [
-            new Transaction(this.coinbase, this.miningRewardAddress, this.miningReward)
-        ];
+		// Memory Pool for storing pending transactions
+		this.memPool = [
+			new Transaction(this.coinbase, this.miningRewardAddress, this.miningReward)
+		];
 
-    }
+	}
 
-    createGenesisBlock() {
-        return new Block(0, "28/06/2018", [], "Genesis block", 3);
-    }
+	createGenesisBlock() {
+		return new Block(0, "28/06/2018", [], "Genesis block", 3);
+	}
 
-    getLatestBlock() {
-        return this.chain[this.chain.length - 1];
-    }
+	getLatestBlock() {
+		return this.chain[this.chain.length - 1];
+	}
 
-    createTransaction(transaction) {
-        this.memPool.push(transaction);
-    }
+	createTransaction(transaction) {
+		this.memPool.push(transaction);
+	}
 
 
-    // Debug
-    getMemPoolState() {
-        for (const tx in this.memPool) {
-            console.log(this.memPool[tx]);
-        }
-    }
+	// Debug
+	getMemPoolState() {
+		for (const tx in this.memPool) {
+			console.log(this.memPool[tx]);
+		}
+	}
 
-    minePendingTransactions() {
-        let latestBlock = this.getLatestBlock(); // latestBlock -> ?????
-        // Create new block with all pending transactions and mine it..
-        let block = new Block(this.chain.length, Date.now(), this.memPool, latestBlock.hash, latestBlock.difficulty);
-        block.mineBlock();
+	minePendingTransactions() {
+		let latestBlock = this.getLatestBlock(); // latestBlock -> ?????
+		// Create new block with all pending transactions and mine it..
+		let block = new Block(this.chain.length, Date.now(), this.memPool, latestBlock.hash, latestBlock.difficulty);
+		block.mineBlock();
 
-        // Add the newly mined block to the chain
-        this.chain.push(block);
+		// Add the newly mined block to the chain
+		this.chain.push(block);
 
-        // Reset the pending transactions and send the mining reward
-        this.memPool = [
-            new Transaction(this.coinbase, this.miningRewardAddress, this.miningReward)
-        ];
-    }
+		// Reset the pending transactions and send the mining reward
+		this.memPool = [
+			new Transaction(this.coinbase, this.miningRewardAddress, this.miningReward)
+		];
+	}
 
-    getBalanceOfAddress(address){
-        // UTXO model
-        let balance = 0; // you start at zero!
+	getBalanceOfAddress(address){
+		// UTXO model
+		let balance = 0; // you start at zero!
 
-        console.log(this.chain);
+		console.log(this.chain);
 
-        // Loop over each block and each transaction inside the block
-        for(const block of this.chain){
-            for(const trans of block.transactions){
+		// Loop over each block and each transaction inside the block
+		for(const block of this.chain){
+			for(const trans of block.transactions){
 
-                // If the given address is the sender -> reduce the balance
-                if(trans.fromAddress === address){
-                    balance -= trans.amount;
-                }
+				// If the given address is the sender -> reduce the balance
+				if(trans.fromAddress === address){
+					balance -= trans.amount;
+				}
 
-                // If the given address is the receiver -> increase the balance
-                if(trans.toAddress === address){
-                    balance += trans.amount;
-                }
-            }
-        }
+				// If the given address is the receiver -> increase the balance
+				if(trans.toAddress === address){
+					balance += trans.amount;
+				}
+			}
+		}
 
-        return balance;
-    }
+		return balance;
+	}
 
-    isChainValid() {
-        for (let i = 1; i < this.chain.length; i++){
-            const currentBlock = this.chain[i];
-            const previousBlock = this.chain[i - 1];
+	isChainValid() {
+		for (let i = 1; i < this.chain.length; i++){
+			const currentBlock = this.chain[i];
+			const previousBlock = this.chain[i - 1];
 
-            if (currentBlock.hash !== currentBlock.calculateHash()) {
-                return false;
-            }
+			if (currentBlock.hash !== currentBlock.calculateHash()) {
+				return false;
+			}
 
-            if (currentBlock.previousHash !== previousBlock.hash) {
-                return false;
-            }
-        }
-        return true;
-    }
+			if (currentBlock.previousHash !== previousBlock.hash) {
+				return false;
+			}
+		}
+		return true;
+	}
 }
 
 module.exports = Blockchain;
