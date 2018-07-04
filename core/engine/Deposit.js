@@ -1,27 +1,45 @@
-var Blockchain = require('../Blockchain.js');
 var Transaction = require('../Transaction.js');
+var BlockDB = require('../BlockDB.js');
+
+var blockDB = new BlockDB('../../blockDB');
 
 // Deposit class defines depositable contracts having their own balance.
 // deposit and withdraw is the main functionality this model supports.
 // Provides security check.
 class Deposit {
-    constructor(blockchain, total) {
-        this.blockchain = blockchain;
+    constructor() {
         this.depositMap = {
-            undefined: total
+            undefined: 0
         };
     }
 
     // Deposit some amount from the node balance.
     deposit(address, amount, signature) {
         // Must be preceded with balance check.
-        blockchain.getBalanceOfAddress(address) < amount;
-        // TODO when does it check??
+        blockDB.getBalance(address, (balance) => {
+            if (balance < amount) {
+                console.log('Balance does not accomodate deposit amount');
+                return;
+            }
 
-        if (!depositMap[address])
-            depositMap[address] += amount;
-        else
-            depositMap[address] = amount;
+            // Update intrinsic balance.
+            var sum = 0;
+            Object.keys(this.depositMap).forEach(function (key) {
+                if (!key)
+                    sum += this.depositMap[key];
+            });
+
+            blockDB.getBalance(/* TODO */ getAddress(), (balance) => {
+                blockDB
+            depositMap[undefined] = blockDB.getBalance(
+
+            // Add new deposit amount
+            if (!depositMap[address])
+                depositMap[address] += amount;
+            else
+                depositMap[address] = amount;
+            depositMap[undefined] -= amount;
+        });
     }
 
     // Withdraw from the deposit in the contract.
