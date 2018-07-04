@@ -1,14 +1,10 @@
+var Transaction = require('../core/Transaction.js');
+var Blockchain = require('../core/Blockchain.js');
+var Block = require('../core/Block.js')
 var jot = require('json-over-tcp');
-var Transaction = require('./Transaction.js');
-var Blockchain = require('./Blockchain.js');
-var Block = require('./Block.js')
 var Promise = require('promise');
 
-
 class Basenode {
-
-
-
     constructor(blockchain, port=3030, firstPeerNode=undefined){
         //TODO peers는 노드정보여야 한다.
         this.peers = [];

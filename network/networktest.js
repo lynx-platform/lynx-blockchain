@@ -1,12 +1,9 @@
-var jot = require('json-over-tcp');
 var Transaction = require('./Transaction.js');
 var Blockchain = require('./Blockchain.js');
-var Promise = require('promise');
 var Network = require('./Network.js')
+var jot = require('json-over-tcp');
+var Promise = require('promise');
 const SHA256 = require('crypto-js/sha256')
-
-
-
 
 let blockchain1 = new Blockchain("first");
 let bNode1 = new Network.Basenode(blockchain1);

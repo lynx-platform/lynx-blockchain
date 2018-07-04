@@ -11,3 +11,5 @@ class Pouch {
     partition(name, ) {
     }
 }
+
+module.exports = Pouch;

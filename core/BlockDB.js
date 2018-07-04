@@ -7,7 +7,7 @@ const chunk = 100;
 
 // Storage class defines basic functionalities to implement storage interface.
 class BlockDB {
-	constructor(path) {
+	constructor (path) {
 		this.blockDB = levelup(leveldown(path));
 	}
 
@@ -38,4 +38,4 @@ class BlockDB {
 	}
 }
 
-module.exports = BlockDB;
+module.exports = Storage;

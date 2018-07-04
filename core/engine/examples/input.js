@@ -1,4 +1,4 @@
-const edge = require('../Edge.js');
+const edge = require('../../../edge/Edge.js');
 
 var a = edge.getInput('a');
 
