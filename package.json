@@ -20,6 +20,7 @@
     "crypto-js": "^3.1.9-1",
     "json-buffer": "^3.0.0",
     "json-over-tcp": "^0.3.2",
-    "json-socket": "^0.3.0"
+    "json-socket": "^0.3.0",
+    "promise": "^8.0.1"
   }
 }
