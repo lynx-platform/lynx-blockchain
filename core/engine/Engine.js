@@ -1,7 +1,7 @@
 var fs = require('fs');
 var SHA256 = require('crypto-js/sha256');
 var exec = require('child_process').exec;
-var Storage = require('./Storage.js');
+var Storage = require('../Storage.js');
 
 var debug_exec = require('debug')('engine:exec');
 var storage = undefined;
@@ -13,9 +13,9 @@ var storage = undefined;
 // contract is done by sending transaction TO a contract address with approp-
 // riate arguments.
 class Engine {
-	constructor(name, callback) {
+	constructor(blockchain, name) {
+		this.blockchain = blockchian;
 		storage = new Storage(name);
-		if (callback) callback();
 	}
 
 	// TODO: fail if a program has been deployed

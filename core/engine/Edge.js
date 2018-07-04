@@ -1,3 +1,4 @@
+const SHA256 = require('crypto-js/sha256');
 const commandLineArgs = require('command-line-args');
 const edge_debug = require('debug')('edge');
 
@@ -38,12 +39,20 @@ class Edge {
 		
 	}
 
-	withdraw(address, amount) {
+	transmit(address, amount) {
 
 	}
 
-	deposit(address, amount) {
+	getTxSigniture() {
+		
+	}
 
+	validateSignature(signature) {
+	
+	}
+
+	hash(input) {
+		return SHA256(input);
 	}
 }
 
