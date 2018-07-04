@@ -46,22 +46,28 @@ class Edge {
 		return 'Σ' + JSON.stringify(this.state);
 	}
 
-	getBalance(address) {
+	getBalance(address, callback) {
 		this.blockDB.get(address (err, balance) => {
-			return balance;
+            if (err) {
+                return console.error(err);
+            }
+            callback(balance);
 		});
 	}
 
 	transmit(address, amount) {
 		this.blockDB.get(this.address, (err, fromBalance) => {
-				this.blockDB.get(address, (err, toBalance) => {
-					if (fromBalance > amount) {
-						
-					}
-				});
+            this.blockDB.get(address, (err, toBalance) => {
+                if (fromBalance > amount) {
+                    // Set state
+                    fromBalance -= amount;
+                    toBalance += amount;
+                }
+            });
 		});
 	}
 
+    /*
 	getTxSigniture() {
 	
 	}
@@ -69,6 +75,7 @@ class Edge {
 	validateSignature(signature) {
 	
 	}
+    */
 
 	hash(input) {
 		return SHA256(input);
