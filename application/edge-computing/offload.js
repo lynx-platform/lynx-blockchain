@@ -42,7 +42,6 @@ class OffloadContract {
             depositMap[address] -= amount;
             
             // Send transaction from contract to the address.
-
         }
     }
 
@@ -59,8 +58,43 @@ class OffloadContract {
     // by name. This abastraction supports manipulation of a balance with lumped
     // model.
     
-    // Create partition
-    partition(name, ) {
+    // Create partition with designated name.
+    partition(name, amount, from) {
+        // Create partition from non-designated balance.
+        if (!from) {
+            Edge.getBalance(this.address, (balance) => {
+                if (get
+
+
+            pouchMap[name] = amount;
+        }
+        // Create partition from the existing one.
+        else {
+            if (pouchMap[from] >= amount) {
+                pouchMap[name] = amount;
+                pouchMap[from] -= amount;
+            }
+        }
+    }
+
+    // Free partition with the given name.
+    free(name) {
+        pouchMap[name] = undefined;
+    }
+
+    // Get amount stored with designated name.
+    getAmount(name) {
+        return pouchMap[name];
+    }
+
+    // Merge multiple pouches into one big pouch.
+    merge(newName, names) {
+        var amount = 0;
+        names.forEach(function (name) {
+            amount += pouchMap[name];
+            pouchMap[name] = undefined;
+        }
+        this.partition(newName, amount);
     }
 
     // Prerequisite
