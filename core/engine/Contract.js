@@ -1,9 +1,10 @@
 var Blockchain = require('../Blockchain.js');
 var Transaction = require('../Transaction.js');
 
-// Contract class defines the edge computing core logics.
-// This part should be extended to the basis of embedded smart contract.
-class Contract {
+// DAO class defines depositable contracts having their own balance.
+// deposit and withdraw is the main functionality this model supports.
+// Provides security check.
+class DAO {
     constructor(blockchain) {
         this.blockchain = blockchain;
         this.depositMap = new Object();
@@ -22,8 +23,8 @@ class Contract {
         }
     }
 
-    // Retrival from the deposit in the contract.
-    retrieval(address, amount) {
+    // Withdraw from the deposit in the contract.
+    withdraw(address, amount) {
         if (depositMap[address] != null) {
             console.log('Retrieval from empty address: ' + address);
         }
@@ -37,9 +38,6 @@ class Contract {
             blockchain.createTransaction(new Transaction(..........));
         }
     }
-
-    // Validate the input data hash
-    validateInput(
 }
 
-module.exports = Contract;
+module.exports = DAO;
