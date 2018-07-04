@@ -4,7 +4,8 @@ var exec = require('child_process').exec;
 var Storage = require('../Storage.js');
 
 var debug_exec = require('debug')('engine:exec');
-var storage = undefined;
+var blockchain = undefined;
+var leveldb = undefined;
 
 // Engine class defines simple execution logic of the blockchain node (client).
 // Lynx blockchain uses Google V8 JavaScript Engine as backbone validating VM.
@@ -13,9 +14,9 @@ var storage = undefined;
 // contract is done by sending transaction TO a contract address with approp-
 // riate arguments.
 class Engine {
-	constructor(blockchain, name) {
-		this.blockchain = blockchian;
-		storage = new Storage(name);
+	constructor(blockchain, programState) {
+		blockchain = new Storage(blockchain);
+		programState = new Storage(programState);
 	}
 
 	// TODO: fail if a program has been deployed
@@ -29,8 +30,8 @@ class Engine {
 		let state = typeof constructor === 'function' ? eval('(' + String(constructor) + ')()') : constructor;
 		console.log('state:\n' + state);
 
-		storage.store(address, state, function() {
-			fs.writeFile('storage/' + address + '.js', code, function(err) {
+		programState.store(address, state, function() {
+			fs.writeFile('programs/' + address + '.js', code, function(err) {
 				if (err) return console.error(err);
 				console.log("Deploy completed");
 			});
@@ -39,9 +40,9 @@ class Engine {
 
 	// execute - Called by transaction which specifies 
 	execute(address, input) {
-		storage.load(address, function(value) {
+		programState.load(address, function(value) {
 			debug_exec(value);
-			let command = 'node ' + 'storage/' + address + '.js --state \'' + value + '\' --input \'' + input + '\'';
+			let command = 'node ' + 'programs/' + address + '.js --state \'' + value + '\' --input \'' + input + '\'';
 			debug_exec(command);
 			let child = exec(command, function (err, stdout, stderr) {
 				if (err) return console.error(err);
@@ -49,7 +50,7 @@ class Engine {
 				//TODO: change stdout to return value of the program
 				if (stdout.charAt(0) == 'Σ') {
 					let state = stdout.substring(1, stdout.length);
-					storage.store(address, state);
+					programState.store(address, state);
 				}
 			});
 		});
