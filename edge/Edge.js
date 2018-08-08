@@ -1,7 +1,7 @@
 const SHA256 = require('crypto-js/sha256');
 const commandLineArgs = require('command-line-args');
 const edge_debug = require('debug')('edge');
-const BlockDB = require('../../BlockDB.js');
+const BlockDB = require('../core/BlockDB.js');
 
 // TODO: refine options
 const argsDefinitions = [
