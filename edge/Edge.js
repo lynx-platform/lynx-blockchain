@@ -1,7 +1,7 @@
 const SHA256 = require('crypto-js/sha256');
 const commandLineArgs = require('command-line-args');
 const edge_debug = require('debug')('edge');
-const BlockDB = require('../../BlockDB.js');
+const BlockDB = require('../core/BlockDB.js');
 
 // TODO: refine options
 const argsDefinitions = [
@@ -29,6 +29,13 @@ class Edge {
 		edge_debug('state: ' + this.state);
 		return this.state[arg];
 	}
+	
+	setState(state) {
+		for (let key in state) {
+			if (key in this.state) this.state[key] = state[key];
+		}
+		return 'Σ' + JSON.stringify(this.state);
+	}
 
 	getInput(arg) {
 		edge_debug('input: ' + this.input);
@@ -39,29 +46,39 @@ class Edge {
 		return this.sender;
 	}
 
-	setState(state) {
-		for (let key in state) {
-			if (key in this.state) this.state[key] = state[key];
-		}
-		return 'Σ' + JSON.stringify(this.state);
-	}
-
-	getBalance(address) {
-		this.blockDB.get(address (err, balance) => {
-			return balance;
+	getBalance(address, callback) {
+		this.blockDB.get(address, (err, balance) => {
+			callback(balance);
 		});
 	}
 
-	transmit(address, amount) {
+	setBalance(address, balance, callback) {
+		this.blockDB.put(address, balance, (err) => {
+			if (err) return console.error(err);
+			callback();
+		});
+	}
+
+	transmit(toAddress, amount, callback) {
 		this.blockDB.get(this.address, (err, fromBalance) => {
-				this.blockDB.get(address, (err, toBalance) => {
-					if (fromBalance > amount) {
-						
-					}
-				});
+			if (err) return console.error(err);	
+			this.blockDB.get(address, (err, toBalance) => {
+				if (err) return console.error(err);
+				if (fromBalance > amount) {
+					this.blockDB.put(toAddress, toBalance + amount, (err) => {
+						if (err) return console.error(err);
+						this.blockDB.put(this.address, fromBalance - amount, (err) => {
+							if (err) return console.error(err);
+							callback();
+						});
+					});
+				}
+				return console.error("Insufficient balance");
+			});
 		});
 	}
 
+    /*
 	getTxSigniture() {
 	
 	}
@@ -69,6 +86,7 @@ class Edge {
 	validateSignature(signature) {
 	
 	}
+    */
 
 	hash(input) {
 		return SHA256(input);
