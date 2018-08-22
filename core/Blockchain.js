@@ -1,6 +1,7 @@
 var Block = require('./Block.js');
 var Transaction = require('./Transaction.js');
-var Engine = require('./core/Engine.js');
+var Engine = require('./engine/Engine.js');
+var BlockDB = require('./BlockDB.js')
 
 // Blockchain class defines the data structure of the full (validating) node
 // in the blockchain network, as well as the APIs to make use of the system.
@@ -8,7 +9,8 @@ class Blockchain {
 	constructor(miningRewardAddress) {
 		// Blockchain
 		this.chain = [this.createGenesisBlock()];
-		this.engine = new Engine(this, 'blockchain');
+		this.blockchainDB = new BlockDB('./blockchain');
+		//this.programStateDB = new BlockDB('./programState');
 
 		// Reward for miner
 		this.coinbase = new Array(64).join('0');
@@ -16,9 +18,8 @@ class Blockchain {
 		this.miningRewardAddress = miningRewardAddress;
 
 		// Memory Pool for storing pending transactions
-		this.memPool = [
-			new Transaction(0, this.coinbase, this.miningRewardAddress, false, this.miningReward, null, null)
-		];
+		this.memPool = [];
+		this.createTransaction( new Transaction(0, 0, this.coinbase, this.miningRewardAddress, false, this.miningReward, null, null));
 	}
 
 	createGenesisBlock() {
@@ -31,6 +32,11 @@ class Blockchain {
 
 	createTransaction(transaction) {
 		this.memPool.push(transaction);
+		/*
+		this.blockchainDB.changeBalance(transaction, ()=>{
+			this.memPool.push(transaction);
+		});
+		*/
 	}
 
 	// Debug
@@ -43,8 +49,10 @@ class Blockchain {
 	minePendingTransactions() {
 		let latestBlock = this.getLatestBlock(); // latestBlock -> ?????
 		// Create new block with all pending transactions and mine it..
-		let block = new Block(this.chain.length, Date.now(), this.memPool, latestBlock.hash, latestBlock.difficulty);
+		let block = new Block(this.chain.length, Date.now(), this.memPool, latestBlock.hash, latestBlock.nonce, latestBlock.difficulty);
 		block.mineBlock();
+		console.log(block);
+
 
 		// Add the newly mined block to the chain
 		this.chain.push(block);
@@ -56,7 +64,12 @@ class Blockchain {
 	}
 
 	getBalanceOfAddress(address){
+		this.blockchainDB.getBalance(address, (balance)=>{
+			consol.log(balance);
+			return balance;
+		});
 		// UTXO model
+		/*
 		let balance = 0; // you start at zero!
 
 		console.log(this.chain);
@@ -76,8 +89,8 @@ class Blockchain {
 				}
 			}
 		}
+		*/
 
-		return balance;
 	}
 
 	isChainValid() {

@@ -1,8 +1,10 @@
 var Transaction = require('../core/Transaction.js');
 var Blockchain = require('../core/Blockchain.js');
 var Block = require('../core/Block.js')
+var blockDB = require('../core/BlockDB.js');
 var jot = require('json-over-tcp');
 var Promise = require('promise');
+
 
 class Basenode {
     constructor(blockchain, port=3030, firstPeerNode=undefined){
@@ -13,14 +15,14 @@ class Basenode {
             this.peers.push(firstPeerNode);
         }
         this.port = port;
+        this.savedBalance = {};
+        this.newAddress = [];
     }
 
     createServer(){
         console.log("create Server");
         let server = jot.createServer();
         server.on('connection', ((socket)=>{
-            //console.log('socket connected>>' + socket.remoteAddress + ':' + socket.remotePort);
-            //console.log('socket connected>>' + socket.localAddress + ':' + socket.localPort);
 
             socket.on('data',((data)=>{
                 console.log(this.port+" : new connection");
@@ -171,6 +173,7 @@ class Basenode {
                     if(inFlag){
                         const newTx = new Transaction(tx.type, tx.nonce, tx.fromAddress, tx.toAddress, tx.isToContract, tx.value, tx.signature, tx.data);
                         this.blockchain.createTransaction(newTx);
+                        blockDB.changeBalance(newTx.fromAddress, newTx.fromAddress, newTx.value);
                         let inv = new Inventory('msg_tx',newTx.calculateHash());
                         invs.push(inv);
                     }

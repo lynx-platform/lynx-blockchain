@@ -18,9 +18,13 @@
   "homepage": "https://github.com/lynx-platform/lynx-blockchain#readme",
   "dependencies": {
     "crypto-js": "^3.1.9-1",
+    "debug": "^3.1.0",
     "json-buffer": "^3.0.0",
     "json-over-tcp": "^0.3.2",
     "json-socket": "^0.3.0",
+    "leveldown": "^4.0.1",
+    "levelup": "^3.1.0",
+    "path": "^0.12.7",
     "promise": "^8.0.1"
   }
 }

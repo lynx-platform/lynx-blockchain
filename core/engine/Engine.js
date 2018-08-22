@@ -1,7 +1,7 @@
 var fs = require('fs');
 var SHA256 = require('crypto-js/sha256');
 var exec = require('child_process').exec;
-var Storage = require('../Storage.js');
+var Storage = require('../BlockDB.js');
 
 var debug_exec = require('debug')('engine:exec');
 var blockchain = undefined;
@@ -15,6 +15,9 @@ var leveldb = undefined;
 // riate arguments.
 class Engine {
 	constructor(blockchain, programState) {
+		console.log("is engine");
+		console.log(blockchain);
+		console.log(programState);
 		blockchain = new Storage(blockchain);
 		programState = new Storage(programState);
 	}
@@ -38,7 +41,7 @@ class Engine {
 		});
 	}
 
-	// execute - Called by transaction which specifies 
+	// execute - Called by transaction which specifies
 	execute(address, input) {
 		programState.load(address, function(value) {
 			debug_exec(value);
