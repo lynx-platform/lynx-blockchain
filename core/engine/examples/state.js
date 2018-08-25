@@ -1,6 +1,6 @@
 const edge = require('../../../edge/Edge.js');
 
-var a = edge.getState('a');
+var a = edge.state['a'];
 
 for (let i = 0; i < 100; i++) {
     a++;

@@ -14,47 +14,47 @@ var leveldb = undefined;
 // contract is done by sending transaction TO a contract address with approp-
 // riate arguments.
 class Engine {
-	constructor(blockchain, programState) {
-		blockchain = new Storage(blockchain);
-		programState = new Storage(programState);
-	}
+    constructor(blockchain, programState) {
+        blockchain = new Storage(blockchain);
+        programState = new Storage(programState);
+    }
 
-	// TODO: fail if a program has been deployed
-	deploy(path, constructor) {
-		let code = fs.readFileSync(path, 'utf8');
-		let name = path.replace(/^.*[\\\/]/, '');
-		let address = SHA256(name + code).toString();
-		console.log('name: ' + name);
-		console.log('address: ' + address);
+    // TODO: fail if a program has been deployed
+    deploy(path, constructor) {
+        let code = fs.readFileSync(path, 'utf8');
+        let name = path.replace(/^.*[\\\/]/, '');
+        let address = SHA256(name + code).toString();
+        console.log('name: ' + name);
+        console.log('address: ' + address);
 
-		let state = typeof constructor === 'function' ? eval('(' + String(constructor) + ')()') : constructor;
-		console.log('state:\n' + state);
+        let state = typeof constructor === 'function' ? eval('(' + String(constructor) + ')()') : constructor;
+        console.log('state:\n' + state);
 
-		programState.store(address, state, function() {
-			fs.writeFile('programs/' + address + '.js', code, function(err) {
-				if (err) return console.error(err);
-				console.log("Deploy completed");
-			});
-		});
-	}
+        programState.store(address, state, function() {
+            fs.writeFile('programs/' + address + '.js', code, function(err) {
+                if (err) return console.error(err);
+                console.log("Deploy completed");
+            });
+        });
+    }
 
-	// execute - Called by transaction which specifies 
-	execute(address, input) {
-		programState.load(address, function(value) {
-			debug_exec(value);
-			let command = 'node ' + 'programs/' + address + '.js --state \'' + value + '\' --input \'' + input + '\'';
-			debug_exec(command);
-			let child = exec(command, function (err, stdout, stderr) {
-				if (err) return console.error(err);
-				debug_exec('stdout: ' + stdout);
-				//TODO: change stdout to return value of the program
-				if (stdout.charAt(0) == 'Σ') {
-					let state = stdout.substring(1, stdout.length);
-					programState.store(address, state);
-				}
-			});
-		});
-	}
+    // execute - Called by transaction which specifies
+    execute(address, msg) {
+        programState.load(address, function(state) {
+            debug_exec(state);
+            let command = 'node ' + 'programs/' + address + '.js --state \'' + state + '\' --msg \'' + msg + '\'';
+            debug_exec(command);
+            let child = exec(command, function (err, stdout, stderr) {
+                if (err) return console.error(err);
+                debug_exec('stdout: ' + stdout);
+                // TODO: change stdout to return value of the program
+                if (stdout.charAt(0) == 'Σ') {
+                    let state = stdout.substring(1, stdout.length);
+                    programState.store(address, state);
+                }
+            });
+        });
+    }
 }
 
 module.exports = Engine;

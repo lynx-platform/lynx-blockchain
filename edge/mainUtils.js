@@ -28,11 +28,13 @@ class mainUtils {
 			const contract = fork(path.resolve(src), [], {});
 
 			contract.on('message', (msg) => {
+                console.log(msg);
 				switch (msg.cmd){
 					case 'balance':
 						//this.blockDB.get(address, (err, balance) => {
 						//	contract.send(balance);
 						//});
+
 						contract.send('100won');
 						break;
 					case 'output':
