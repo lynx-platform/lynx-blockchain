@@ -22,8 +22,8 @@ bNode2.createServer();
 for(let i=1; i<100; i++){
     setTimeout(()=>{
         console.log("start "+i);
-        bNode2.blockchain.createTransaction(new Transaction(i*i+i+20,4*i*i+3,i*i*23+i*48));
-        bNode2.blockchain.createTransaction(new Transaction(i,2*i,3*i));
+        bNode2.blockchain.createTransaction(new Transaction('type', 0, 'second', new Array(64).join(1), false, i*2, "signature", 'data'));
+        // bNode2.blockchain.createTransaction(new Transaction(i,2*i,3*i));
         bNode2.blockchain.minePendingTransactions();
         bNode2.sendInv([new Network.Inventory('msg_block', bNode2.blockchain.chain[i].hash)],()=>{console.log(bNode2.blockchain.chain[i].hash)});
     },5000*i);

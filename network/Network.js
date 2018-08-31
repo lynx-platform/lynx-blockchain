@@ -15,7 +15,6 @@ class Basenode {
             this.peers.push(firstPeerNode);
         }
         this.port = port;
-        this.savedBalance = {};
         this.newAddress = [];
     }
 

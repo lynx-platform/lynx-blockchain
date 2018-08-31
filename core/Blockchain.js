@@ -9,21 +9,46 @@ class Blockchain {
 	constructor(miningRewardAddress) {
 		// Blockchain
 		this.chain = [this.createGenesisBlock()];
-		this.blockchainDB = new BlockDB('./blockchain');
-		//this.programStateDB = new BlockDB('./programState');
+		// this.blockchainDB = new BlockDB('./blockchain');
+		this.blockDB = new BlockDB();
+
+		this.confirmBalance = {};
+		this.currentBalance = {};
 
 		// Reward for miner
 		this.coinbase = new Array(64).join('0');
+		console.log("coinbase : ", this.coinbase);
 		this.miningReward = 100;
 		this.miningRewardAddress = miningRewardAddress;
 
 		// Memory Pool for storing pending transactions
 		this.memPool = [];
-		this.createTransaction( new Transaction(0, 0, this.coinbase, this.miningRewardAddress, false, this.miningReward, null, null));
+		this.createTransaction( new Transaction('type', 'nonce', this.coinbase, this.miningRewardAddress, false, this.miningReward, null, null));
 	}
 
 	createGenesisBlock() {
 		return new Block(0, "28/06/2018", [], "Genesis block", 3);
+	}
+
+	pushBlock(block) {
+		if(block.index = this.chain.length){
+			if(block.previousHash == this.chain[this.chain.length - 1].hash) {
+				this.chain.append(block);
+				return 0;
+			}
+		}
+		else if(block.index < this.chain.length){
+			this.chain[block.index] = block;
+			return 0;
+		}
+		else {
+			for(var i=0 ; i<block.index-this.chain.length ; i++){
+				this.chain.append(0);
+			}
+			this.chain.append(block);
+		}
+
+		this.blockDB.putBlock(block);
 	}
 
 	getLatestBlock() {
@@ -31,12 +56,10 @@ class Blockchain {
 	}
 
 	createTransaction(transaction) {
-		this.memPool.push(transaction);
-		/*
-		this.blockchainDB.changeBalance(transaction, ()=>{
+		if(this.isTransactionValid(transaction)) {
+			this.changeCurrentBalance(transaction);
 			this.memPool.push(transaction);
-		});
-		*/
+		}
 	}
 
 	// Debug
@@ -53,14 +76,15 @@ class Blockchain {
 		block.mineBlock();
 		console.log(block);
 
+		this.blockDB.putBlock(block);
 
 		// Add the newly mined block to the chain
 		this.chain.push(block);
 
 		// Reset the pending transactions and send the mining reward
-		this.memPool = [
-			new Transaction(0, this.coinbase, this.miningRewardAddress, false, this.miningReward, null, null)
-		];
+		const coinbaseTransaction = new Transaction('type', 'nonce', this.coinbase, this.miningRewardAddress, false, this.miningReward, null, null);
+		this.memPool = [coinbaseTransaction];
+		this.changeCurrentBalance(coinbaseTransaction);
 	}
 
 	getBalanceOfAddress(address){
@@ -107,6 +131,26 @@ class Blockchain {
 			}
 		}
 		return true;
+	}
+
+	isTransactionValid(transaction) {
+		if (this.currentBalance[transaction.fromAddress]-transaction.value > 0) return true
+		else return false
+	}
+
+	changeCurrentBalance(transaction) {
+		const fromAddress = transaction.fromAddress
+		const toAddress = transaction.toAddress
+		const value = transaction.value
+		if(fromAddress != this.coinbase){
+			this.currentBalance[fromAddress] -= value;
+		}
+		if(!(toAddress in this.currentBalance)){
+			this.currentBalance[toAddress] = 0;
+			console.log(this.currentBalance[toAddress]);
+		}
+		this.currentBalance[toAddress] += value;
+		console.log("current Balance : ", this.currentBalance)
 	}
 }
 
