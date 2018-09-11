@@ -4,4 +4,5 @@ for (let i = 0; i < 100; i++) {
     a++;
 }
 
-libx.setValue('a', a);
+console.log(a);
+libx.returnValue(a);
