@@ -12,6 +12,7 @@ class Storage {
 		this.db.get(address, (err, value) => {
 			if (err) {
 				console.error(`A state of ${address} does not exist`);
+                // if the state does not exist, hand over an empty object
 				callback('{}');
 			} else {
 				console.log("[storage] value: " + value);
